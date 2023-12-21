@@ -234,8 +234,9 @@ l15_rtrn_t rtrn_fifo_data;
   // l15_rtrn_i.l15_f4b;                   // 4byte instruction fill from I/O space (nc).
   // l15_rtrn_i.l15_data_0;                // used for both caches
   // l15_rtrn_i.l15_data_1;                // used for both caches
-  // l15_rtrn_i.l15_data_2;                // currently only used for I$
-  // l15_rtrn_i.l15_data_3;                // currently only used for I$
+  // l15_rtrn_i.l15_data_2;                // used for both caches
+  // l15_rtrn_i.l15_data_3;                // used for both caches
+  // l15_rtrn_i.l15_data_...;                // currently only used for D$
   // l15_rtrn_i.l15_inval_icache_all_way;  // invalidate all ways
   // l15_rtrn_i.l15_inval_address;         // invalidate selected cacheline
   // l15_rtrn_i.l15_inval_dcache_inval;    // invalidate selected cacheline and way
@@ -289,21 +290,18 @@ l15_rtrn_t rtrn_fifo_data;
 
   // openpiton is big endian
   if (SwapEndianess) begin : gen_swap
-    assign dcache_rtrn_o.data = { swendian64(rtrn_fifo_data.l15_data_1),
-                                  swendian64(rtrn_fifo_data.l15_data_0) };
-
-    assign icache_rtrn_o.data = { swendian64(rtrn_fifo_data.l15_data_3),
-                                  swendian64(rtrn_fifo_data.l15_data_2),
-                                  swendian64(rtrn_fifo_data.l15_data_1),
-                                  swendian64(rtrn_fifo_data.l15_data_0) };
+    genvar i;
+    for (i=0;i < wt_cache_pkg::L1D_MAX_DATA_PACKETS; i++) begin
+      assign dcache_rtrn_o.data[(i*64)+63:i*64] = swendian64(rtrn_fifo_data.l15_data[(i*64)+63:i*64]);
+    end
+    assign icache_rtrn_o.data = { 
+                                  swendian64(rtrn_fifo_data.l15_data[255:192]),
+                                  swendian64(rtrn_fifo_data.l15_data[191:128]),
+                                  swendian64(rtrn_fifo_data.l15_data[127:64]),
+                                  swendian64(rtrn_fifo_data.l15_data[63:0]) };
   end else begin : gen_no_swap
-    assign dcache_rtrn_o.data = { rtrn_fifo_data.l15_data_1,
-                                  rtrn_fifo_data.l15_data_0 };
-
-    assign icache_rtrn_o.data = { rtrn_fifo_data.l15_data_3,
-                                  rtrn_fifo_data.l15_data_2,
-                                  rtrn_fifo_data.l15_data_1,
-                                  rtrn_fifo_data.l15_data_0 };
+    assign dcache_rtrn_o.data =   rtrn_fifo_data.l15_data[ariane_pkg::DCACHE_LINE_WIDTH-1 : 0];
+    assign icache_rtrn_o.data =   rtrn_fifo_data.l15_data[255:0];
   end
 
   // fifo signals

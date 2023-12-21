@@ -481,7 +481,9 @@ package riscv;
         CSR_HPM_COUNTER_28 = 12'hC1C,  // reserved
         CSR_HPM_COUNTER_29 = 12'hC1D,  // reserved
         CSR_HPM_COUNTER_30 = 12'hC1E,  // reserved
-        CSR_HPM_COUNTER_31 = 12'hC1F  // reserved
+        CSR_HPM_COUNTER_31 = 12'hC1F,  // reserved
+        TO_HOST         = 12'h9F0  // to host csr used for simulation
+
     } csr_reg_t;
 
     localparam logic [63:0] SSTATUS_UIE  = 'h00000001;
