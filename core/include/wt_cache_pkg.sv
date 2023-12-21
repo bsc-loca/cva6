@@ -38,14 +38,18 @@ package wt_cache_pkg;
 `ifndef TLB_CSM_WIDTH
     `define TLB_CSM_WIDTH 33
 `endif
-
-  localparam L15_SET_ASSOC           = `CONFIG_L15_ASSOCIATIVITY;
-  localparam L15_TID_WIDTH           = `L15_THREADID_WIDTH;
-  localparam L15_TLB_CSM_WIDTH       = `TLB_CSM_WIDTH;
+  localparam L1_MAX_DATA_PACKETS                = `L1_MAX_DATA_PACKETS;
+  localparam L1_MAX_DATA_PACKETS_BITS_WIDTH     = `L1_MAX_DATA_PACKETS_BITS_WIDTH;
+  localparam L1D_MAX_DATA_PACKETS               = `L1D_MAX_DATA_PACKETS;
+  localparam L15_SET_ASSOC                      = `CONFIG_L15_ASSOCIATIVITY;
+  localparam L15_TID_WIDTH                      = `L15_THREADID_WIDTH;
+  localparam L15_TLB_CSM_WIDTH                  = `TLB_CSM_WIDTH;
 `else
-  localparam L15_SET_ASSOC           = ariane_pkg::DCACHE_SET_ASSOC;// align with dcache for compatibility with the standard Ariane setup
-  localparam L15_TID_WIDTH           = 2;
-  localparam L15_TLB_CSM_WIDTH       = 33;
+  localparam L1_MAX_DATA_PACKETS                = 4;
+  localparam L1_MAX_DATA_PACKETS_BITS_WIDTH     = 256;
+  localparam L15_SET_ASSOC                      = ariane_pkg::DCACHE_SET_ASSOC;// align with dcache for compatibility with the standard Ariane setup
+  localparam L15_TID_WIDTH                      = 2;
+  localparam L15_TLB_CSM_WIDTH                  = 33;
 `endif
   localparam L15_WAY_WIDTH           = $clog2(L15_SET_ASSOC);
   localparam L1I_WAY_WIDTH           = $clog2(ariane_pkg::ICACHE_SET_ASSOC);
@@ -242,10 +246,7 @@ package wt_cache_pkg;
     logic [L15_TID_WIDTH-1:0]          l15_threadid;              // used as transaction ID
     logic                              l15_prefetch;              // unused in openpiton
     logic                              l15_f4b;                   // 4byte instruction fill from I/O space (nc).
-    logic [63:0]                       l15_data_0;                // used for both caches
-    logic [63:0]                       l15_data_1;                // used for both caches
-    logic [63:0]                       l15_data_2;                // currently only used for I$
-    logic [63:0]                       l15_data_3;                // currently only used for I$
+    logic [L1_MAX_DATA_PACKETS_BITS_WIDTH-1:0] l15_data;                // used for both caches
     logic                              l15_inval_icache_all_way;  // invalidate all ways
     logic                              l15_inval_dcache_all_way;  // unused in openpiton
     logic [`L15_PADDR_MASK]            l15_inval_address;         // invalidation address
