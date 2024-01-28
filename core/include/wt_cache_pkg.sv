@@ -125,7 +125,7 @@ package wt_cache_pkg;
     logic                                            vld;         // invalidate only affected way
     logic                                            all;         // invalidate all ways
     logic [ariane_pkg::ICACHE_INDEX_WIDTH-1:0]       idx;         // physical address to invalidate
-    logic [L15_WAY_WIDTH-1:0]                        way;         // way to invalidate
+    logic [L1I_WAY_WIDTH-1:0]                        way;         // way to invalidate
   } icache_inval_t;
 
   typedef struct packed {
@@ -148,7 +148,7 @@ package wt_cache_pkg;
     logic                                            vld;         // invalidate only affected way
     logic                                            all;         // invalidate all ways
     logic [ariane_pkg::DCACHE_INDEX_WIDTH-1:0]       idx;         // physical address to invalidate
-    logic [L15_WAY_WIDTH-1:0]                        way;         // way to invalidate
+    logic [L1D_WAY_WIDTH-1:0]                        way;         // way to invalidate
   } dcache_inval_t;
 
   typedef struct packed {
@@ -223,7 +223,7 @@ package wt_cache_pkg;
     logic                              l15_invalidate_cacheline;  // unused by Ariane as L1 has no ECC at the moment
     logic                              l15_blockstore;            // unused in openpiton
     logic                              l15_blockinitstore;        // unused in openpiton
-    logic [L15_WAY_WIDTH-1:0]          l15_l1rplway;              // way to replace
+    logic [L1D_WAY_WIDTH-1:0]         l15_l1rplway;              // way to replace
     logic [39:0]                       l15_address;               // physical address
     logic [63:0]                       l15_data;                  // word to write
     logic [63:0]                       l15_data_next_entry;       // unused in Ariane (only used for CAS atomic requests)
@@ -251,10 +251,10 @@ package wt_cache_pkg;
     logic                              l15_inval_dcache_all_way;  // unused in openpiton
     logic [`L15_PADDR_MASK]            l15_inval_address;         // invalidation address
     logic                              l15_cross_invalidate;      // unused in openpiton
-    logic [L15_WAY_WIDTH-1:0]          l15_cross_invalidate_way;  // unused in openpiton
+    logic [L1D_WAY_WIDTH-1:0]    l15_cross_invalidate_way;  // unused in openpiton
     logic                              l15_inval_dcache_inval;    // invalidate selected cacheline and way
     logic                              l15_inval_icache_inval;    // unused in openpiton
-    logic [L15_WAY_WIDTH-1:0]          l15_inval_way;             // way to invalidate
+    logic [L1D_WAY_WIDTH-1:0]    l15_inval_way;             // way to invalidate
     logic                              l15_blockinitstore;        // unused in openpiton
   } l15_rtrn_t;
 
