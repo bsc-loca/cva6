@@ -53,6 +53,9 @@ package ariane_pkg;
       //
       logic [63:0]                      DmBaseAddress;         // offset of the debug module
       int unsigned                      NrPMPEntries;          // Number of PMP entries
+      // Enable HPDC Write Coalescing feature
+      bit                               WriteCoalescingEn;
+      int unsigned                      WriteCoalescingTh; 
     } ariane_cfg_t;
 
     localparam ariane_cfg_t ArianeDefaultConfig = '{
@@ -76,7 +79,9 @@ package ariane_pkg;
       SwapEndianess:          1'b0,
       // debug
       DmBaseAddress:          64'h0,
-      NrPMPEntries:           8
+      NrPMPEntries:           8,
+      WriteCoalescingEn:      1'b0,
+      WriteCoalescingTh:      0
     };
 
     // Function being called to check parameters
@@ -453,8 +458,7 @@ package ariane_pkg;
     localparam int unsigned DCACHE_USER_LINE_WIDTH  = (AXI_USER_WIDTH == 1) ? 4 : 128; // in bit
     localparam int unsigned DCACHE_USER_WIDTH  = DATA_USER_WIDTH;
     localparam int unsigned DCACHE_TID_WIDTH   = cva6_config_pkg::CVA6ConfigDcacheIdWidth;
-    //localparam int unsigned MEM_TID_WIDTH      = 3; //Minimum for the HPDC with single channel to MM, OP can only support `L15_THREADID_WIDTH;
-    localparam int unsigned MEM_TID_WIDTH      = (`L15_THREADID_WIDTH > 2) ? (`L15_THREADID_WIDTH) : 3;
+    localparam int unsigned MEM_TID_WIDTH      = (`L15_THREADID_WIDTH > 2) ? (`L15_THREADID_WIDTH) : 3; //Minimum for the HPDC with single channel to MM, OP can only support `L15_THREADID_WIDTH;
 `else
     // I$
     localparam int unsigned CONFIG_L1I_SIZE    = 16*1024;

@@ -44,12 +44,16 @@ package wt_cache_pkg;
   localparam L15_SET_ASSOC                      = `CONFIG_L15_ASSOCIATIVITY;
   localparam L15_TID_WIDTH                      = `L15_THREADID_WIDTH;
   localparam L15_TLB_CSM_WIDTH                  = `TLB_CSM_WIDTH;
+  localparam L15_PADDR_WIDTH                    = `L15_PADDR_WIDTH;
+  localparam L15_BYTE_MASK_WIDHT                = `L15_BYTE_MASK_WIDHT;
 `else
   localparam L1_MAX_DATA_PACKETS                = 4;
   localparam L1_MAX_DATA_PACKETS_BITS_WIDTH     = 256;
   localparam L15_SET_ASSOC                      = ariane_pkg::DCACHE_SET_ASSOC;// align with dcache for compatibility with the standard Ariane setup
-  localparam L15_TID_WIDTH                      = 2;
+  localparam L15_TID_WIDTH                      = ariane_pkg::MEM_TID_WIDTH;
   localparam L15_TLB_CSM_WIDTH                  = 33;
+  localparam L15_PADDR_WIDTH                    = 40;
+  localparam L15_BYTE_MASK_WIDHT                = 8;
 `endif
   localparam L15_WAY_WIDTH           = $clog2(L15_SET_ASSOC);
   localparam L1I_WAY_WIDTH           = $clog2(ariane_pkg::ICACHE_SET_ASSOC);
@@ -223,15 +227,13 @@ package wt_cache_pkg;
     logic                              l15_invalidate_cacheline;  // unused by Ariane as L1 has no ECC at the moment
     logic                              l15_blockstore;            // unused in openpiton
     logic                              l15_blockinitstore;        // unused in openpiton
-    logic [L1D_WAY_WIDTH-1:0]         l15_l1rplway;              // way to replace
+    logic [L1D_WAY_WIDTH-1:0]          l15_l1rplway;              // way to replace
     logic [39:0]                       l15_address;               // physical address
     logic [63:0]                       l15_data;                  // word to write
     logic [63:0]                       l15_data_next_entry;       // unused in Ariane (only used for CAS atomic requests)
     logic [L15_TLB_CSM_WIDTH-1:0]      l15_csm_data;              // unused in Ariane
-    logic [3:0]                        l15_amo_op;                // atomic operation type
-    `ifdef WRITE_BYTE_MASK                                       
-    logic [`L15_BYTE_MASK_WIDHT-1:0]   l15_be;                    // Byte mask
-    `endif 
+    logic [3:0]                        l15_amo_op;                // atomic operation type                                    
+    logic [L15_BYTE_MASK_WIDHT-1:0]    l15_be;                    // Byte mask
   } l15_req_t;
 
   typedef struct packed {
@@ -249,12 +251,12 @@ package wt_cache_pkg;
     logic [L1_MAX_DATA_PACKETS_BITS_WIDTH-1:0] l15_data;                // used for both caches
     logic                              l15_inval_icache_all_way;  // invalidate all ways
     logic                              l15_inval_dcache_all_way;  // unused in openpiton
-    logic [`L15_PADDR_MASK]            l15_inval_address;         // invalidation address
+    logic [L15_PADDR_WIDTH-1:0]        l15_inval_address;         // invalidation address
     logic                              l15_cross_invalidate;      // unused in openpiton
-    logic [L1D_WAY_WIDTH-1:0]    l15_cross_invalidate_way;  // unused in openpiton
+    logic [L1D_WAY_WIDTH-1:0]          l15_cross_invalidate_way;  // unused in openpiton
     logic                              l15_inval_dcache_inval;    // invalidate selected cacheline and way
     logic                              l15_inval_icache_inval;    // unused in openpiton
-    logic [L1D_WAY_WIDTH-1:0]    l15_inval_way;             // way to invalidate
+    logic [L1D_WAY_WIDTH-1:0]          l15_inval_way;             // way to invalidate
     logic                              l15_blockinitstore;        // unused in openpiton
   } l15_rtrn_t;
 
