@@ -73,6 +73,8 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
   input   logic                               dcache_miss_resp_ready_i,
   output  logic                               dcache_miss_resp_valid_o,
   output  hpdcache_mem_resp_r_t               dcache_miss_resp_o,
+  output  logic                               dcache_inval_valid_o,
+  output  hpdcache_pkg::hpdcache_nline_t      dcache_inval_o,
 
   //      Write-buffer write interface
   output  logic                               dcache_wbuf_ready_o,
@@ -108,10 +110,6 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
   input   logic                               dcache_uc_write_resp_ready_i,
   output  logic                               dcache_uc_write_resp_valid_o,
   output  hpdcache_mem_resp_w_t               dcache_uc_write_resp_o,
-
-  input   logic                               dcache_inval_ready_i,
-  output  logic                               dcache_inval_valid_o,
-  output  hpdcache_pkg::hpdcache_req_t        dcache_inval_o,
   //  }}}
   
   //    Ports to/from L1.5 
@@ -137,7 +135,7 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
        logic                                     mem_resp_w_is_atomic;
        logic                                     mem_inval_icache_valid;
        logic                                     mem_inval_dcache_valid;
-       hpdcache_pkg::hpdcache_req_t              mem_inval;
+       hpdcache_pkg::hpdcache_nline_t            mem_inval;
   } hpdcache_mem_resp_t;
   //  }}}
 
@@ -212,7 +210,7 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
          icache_miss_resp_o.rtype = (icache_miss_resp_wdata.mem_inval_icache_valid) ?  wt_cache_pkg::ICACHE_INV_REQ : wt_cache_pkg::ICACHE_IFILL_ACK,
          icache_miss_resp_o.data = icache_miss_resp_data_rdata,
          icache_miss_resp_o.user = '0,
-         icache_miss_resp_o.inv.idx = {icache_miss_resp_inval_address[ariane_pkg::ICACHE_INDEX_WIDTH-1:4], 4'b0000},
+         icache_miss_resp_o.inv.idx = icache_miss_resp_inval_address,
          icache_miss_resp_o.inv.all = icache_miss_resp_wdata.mem_inval_icache_valid,
          icache_miss_resp_o.inv.way = '0,
          icache_miss_resp_o.inv.vld = '0,
@@ -222,7 +220,7 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
          icache_miss_resp_wok = 1'b1,
          icache_miss_resp_meta_id = icache_miss_resp_wdata.mem_resp_id,
          icache_miss_resp_data_rdata = icache_miss_resp_wdata.mem_resp_r_data[ariane_pkg::ICACHE_LINE_WIDTH-1:0],
-         icache_miss_resp_inval_address = {icache_miss_resp_wdata.mem_inval.addr_tag,icache_miss_resp_wdata.mem_inval.addr_offset};
+         icache_miss_resp_inval_address = {icache_miss_resp_wdata.mem_inval, 4'b0000};
   //    }}}
   //  }}}
 
@@ -348,7 +346,12 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
   hpdcache_mem_resp_t                  mem_resp_arb       [NumPorts-1:0];
 
   //Port IcachePort -> ICACHE, Port DcachePort -> Read, Port DcacheWbufPort -> Write, Port DcacheUncReadPort -> UC Read, Port DcacheUncWritePort -> UC Write DcacheAmoPort -> Atomic operations
-  req_portid_t           mem_resp_pid;
+  req_portid_t                         mem_resp_pid;
+
+  // L1.5 Invalidation request to dcache 
+  logic                                inval_ready;
+  logic                                inval_valid;
+  hpdcache_pkg::hpdcache_nline_t       inval;
 
   hpdcache_l15_resp_demux #(
     .N                  (NumPorts),
@@ -376,11 +379,13 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
          icache_miss_resp_wdata                         = mem_resp_arb[IcachePort],
          mem_resp_ready_arb[IcachePort]                 = icache_miss_resp_wok;
   // Read
-  assign dcache_miss_resp_valid_o                       = mem_resp_valid_arb[DcachePort],
+  assign dcache_miss_resp_valid_o                       = mem_resp_valid_arb[DcachePort] || inval_valid,
          dcache_miss_resp_o.mem_resp_r_data             = mem_resp_arb[DcachePort].mem_resp_r_data[HPDcacheMemDataWidth-1:0],
          dcache_miss_resp_o.mem_resp_r_error            = mem_resp_arb[DcachePort].mem_resp_error,
          dcache_miss_resp_o.mem_resp_r_id               = mem_resp_arb[DcachePort].mem_resp_id,
          dcache_miss_resp_o.mem_resp_r_last             = mem_resp_arb[DcachePort].mem_resp_r_last,
+         dcache_inval_valid_o                           = inval_valid,
+         dcache_inval_o                                 = inval,
          mem_resp_ready_arb[DcachePort]                 = dcache_miss_resp_ready_i;
   // Write
   assign dcache_wbuf_resp_valid_o                       = mem_resp_valid_arb[DcacheWbufPort],
@@ -417,6 +422,10 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
   // Atomic operations send the response to both Unc. Read and Write ports
   assign mem_resp_ready_arb[DcacheAmoPort] = dcache_uc_write_resp_ready_i & dcache_uc_read_resp_ready_i;
 
+    // L1.5 Invalidation request to dcache 
+  assign inval_ready = dcache_miss_resp_ready_i, // Refill ready declares if hpdc is ready to receive an invalidation
+         inval_valid = mem_resp.mem_inval_dcache_valid,
+         inval       = mem_resp.mem_inval;
   //  }}}
 
   //  L15 Adapter
@@ -424,9 +433,6 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
 
   wt_cache_pkg::l15_req_t          l15_req;
   wt_cache_pkg::l15_rtrn_t         l15_rtrn;
-  logic                            dcache_inval_ready;
-  logic                            dcache_inval_valid;
-  hpdcache_pkg::hpdcache_req_t     dcache_inval;
 
   hpdcache_to_l15 #(
        .NumPorts                 (NumPorts), // Number of request types
@@ -462,23 +468,18 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
     .resp_valid_o         (mem_resp_valid),
     .resp_pid_o           (mem_resp_pid),
     .resp_o               (mem_resp),
-    //L1.5 Inval request
-    .hpdc_fifo_inval_ready_i   (dcache_inval_ready),
-    .hpdc_fifo_inval_valid_o   (dcache_inval_valid),
-    .hpdc_fifo_inval_o         (dcache_inval),
+    //HPDC inval ready
+    .hpdc_inval_ready_i   (inval_ready),
     //Back-off parameter to guarantee the LR/SC completion
-    .sc_backoff_over_o         (sc_backoff_over),
+    .sc_backoff_over_o    (sc_backoff_over),
 
     //Adapter to L1.5, sending request
-    .l15_req_o                 (l15_req),      // L1.5 Request
+    .l15_req_o            (l15_req),      // L1.5 Request
     //L1.5 to Adapter
-    .l15_rtrn_i                (l15_rtrn)      // L1.5 Response
+    .l15_rtrn_i           (l15_rtrn)      // L1.5 Response
   );
 
   assign l15_req_o = l15_req;
   assign l15_rtrn = l15_rtrn_i;
-  assign dcache_inval_o = dcache_inval,
-         dcache_inval_valid_o = dcache_inval_valid,
-         dcache_inval_ready = dcache_inval_ready_i;
   //  }}}
 endmodule : cva6_hpdcache_subsystem_l15_adapter

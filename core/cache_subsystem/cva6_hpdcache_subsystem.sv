@@ -228,9 +228,8 @@ module cva6_hpdcache_subsystem import ariane_pkg::*; import wt_cache_pkg::*; imp
   logic                                     dcache_uc_write_resp_valid;
   hpdcache_mem_resp_w_t                     dcache_uc_write_resp;
 
-  logic                                     dcache_inval_ready;
   logic                                     dcache_inval_valid;
-  hpdcache_pkg::hpdcache_req_t              dcache_inval;
+  hpdcache_pkg::hpdcache_nline_t            dcache_inval;
 
   hwpf_stride_pkg::hwpf_stride_throttle_t [NrHwPrefetchers-1:0] hwpf_throttle_in;
   hwpf_stride_pkg::hwpf_stride_throttle_t [NrHwPrefetchers-1:0] hwpf_throttle_out;
@@ -430,6 +429,10 @@ module cva6_hpdcache_subsystem import ariane_pkg::*; import wt_cache_pkg::*; imp
     .mem_resp_miss_read_ready_o        (dcache_miss_resp_ready),
     .mem_resp_miss_read_valid_i        (dcache_miss_resp_valid),
     .mem_resp_miss_read_i              (dcache_miss_resp),
+  `ifdef HPDCACHE_OPENPITON
+    .mem_resp_miss_read_inval_i        (dcache_inval_valid),
+    .mem_resp_miss_read_inval_nline_i  (dcache_inval),
+  `endif
 
     .mem_req_wbuf_write_ready_i        (dcache_wbuf_ready),
     .mem_req_wbuf_write_valid_o        (dcache_wbuf_valid),
@@ -462,10 +465,6 @@ module cva6_hpdcache_subsystem import ariane_pkg::*; import wt_cache_pkg::*; imp
     .mem_resp_uc_write_ready_o         (dcache_uc_write_resp_ready),
     .mem_resp_uc_write_valid_i         (dcache_uc_write_resp_valid),
     .mem_resp_uc_write_i               (dcache_uc_write_resp),
-
-    .mem_inval_ready_o                 (dcache_inval_ready),
-    .mem_inval_valid_i                 (dcache_inval_valid),
-    .mem_inval_i                       (dcache_inval),
 
     .evt_cache_write_miss_o            (dcache_write_miss),
     .evt_cache_read_miss_o             (dcache_read_miss),
@@ -557,6 +556,8 @@ module cva6_hpdcache_subsystem import ariane_pkg::*; import wt_cache_pkg::*; imp
     .dcache_miss_resp_ready_i                        (dcache_miss_resp_ready),
     .dcache_miss_resp_valid_o                        (dcache_miss_resp_valid),
     .dcache_miss_resp_o                              (dcache_miss_resp),
+    .dcache_inval_valid_o                            (dcache_inval_valid),
+    .dcache_inval_o                                  (dcache_inval),
 
     .dcache_wbuf_ready_o                             (dcache_wbuf_ready),
     .dcache_wbuf_valid_i                             (dcache_wbuf_valid),
@@ -589,10 +590,6 @@ module cva6_hpdcache_subsystem import ariane_pkg::*; import wt_cache_pkg::*; imp
     .dcache_uc_write_resp_ready_i                    (dcache_uc_write_resp_ready),
     .dcache_uc_write_resp_valid_o                    (dcache_uc_write_resp_valid),
     .dcache_uc_write_resp_o                          (dcache_uc_write_resp),
-
-    .dcache_inval_ready_i                            (dcache_inval_ready),
-    .dcache_inval_valid_o                            (dcache_inval_valid),
-    .dcache_inval_o                                  (dcache_inval),
 
     .l15_req_o                                       (l15_req_o),
     .l15_rtrn_i                                      (l15_rtrn_i)
