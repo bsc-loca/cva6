@@ -135,7 +135,7 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
        logic                                     mem_resp_w_is_atomic;
        logic                                     mem_inval_icache_valid;
        logic                                     mem_inval_dcache_valid;
-       hpdcache_pkg::hpdcache_nline_t            mem_inval;
+       logic [wt_cache_pkg::L15_PADDR_WIDTH-1:0] mem_inval;
   } hpdcache_mem_resp_t;
   //  }}}
 
@@ -220,7 +220,7 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
          icache_miss_resp_wok = 1'b1,
          icache_miss_resp_meta_id = icache_miss_resp_wdata.mem_resp_id,
          icache_miss_resp_data_rdata = icache_miss_resp_wdata.mem_resp_r_data[ariane_pkg::ICACHE_LINE_WIDTH-1:0],
-         icache_miss_resp_inval_address = {icache_miss_resp_wdata.mem_inval, 4'b0000};
+         icache_miss_resp_inval_address = {icache_miss_resp_wdata.mem_inval[ariane_pkg::ICACHE_INDEX_WIDTH-1:4], 4'b0000};
   //    }}}
   //  }}}
 
@@ -425,7 +425,7 @@ module cva6_hpdcache_subsystem_l15_adapter import ariane_pkg::*;import wt_cache_
     // L1.5 Invalidation request to dcache 
   assign inval_ready = dcache_miss_resp_ready_i, // Refill ready declares if hpdc is ready to receive an invalidation
          inval_valid = mem_resp.mem_inval_dcache_valid,
-         inval       = mem_resp.mem_inval;
+         inval       = hpdcache_get_req_addr_nline(mem_resp.mem_inval);
   //  }}}
 
   //  L15 Adapter
