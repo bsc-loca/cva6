@@ -115,6 +115,7 @@ module fifo_v3_initialized #(
             read_pointer_q  <= '0;
             write_pointer_q <= '0;
             status_cnt_q    <= FifoDepth[ADDR_DEPTH:0];
+            mem_q <= reset_value_i;
         end else begin
             if (flush_i) begin
                 read_pointer_q  <= '0;
@@ -125,15 +126,8 @@ module fifo_v3_initialized #(
                 read_pointer_q  <= read_pointer_n;
                 write_pointer_q <= write_pointer_n;
                 status_cnt_q    <= status_cnt_n;
+                if (!gate_clock) mem_q <= mem_n;
             end
-        end
-    end
-
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-        if(~rst_ni) begin
-            mem_q <= reset_value_i;
-        end else if (!gate_clock) begin
-            mem_q <= mem_n;
         end
     end
 
