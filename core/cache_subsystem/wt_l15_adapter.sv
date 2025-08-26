@@ -314,7 +314,9 @@ l15_rtrn_t rtrn_fifo_data;
     dcache_rtrn_vld_o   = 1'b0;
     icache_rtrn_o.inv.vld  = rtrn_fifo_data.l15_inval_icache_inval;
     dcache_rtrn_o.inv.vld  = rtrn_fifo_data.l15_inval_dcache_inval;
-    
+    icache_rtrn_o.inv.all  = rtrn_fifo_data.l15_inval_icache_all_way;
+    dcache_rtrn_o.inv.all  = rtrn_fifo_data.l15_inval_dcache_all_way;
+
     if(!rtrn_fifo_empty) begin
       unique case (rtrn_fifo_data.l15_returntype)
         L15_LOAD_RET:  begin
@@ -374,12 +376,8 @@ l15_rtrn_t rtrn_fifo_data;
   assign icache_rtrn_o.inv.idx  = {rtrn_fifo_data.l15_inval_address[15:4], 4'b0000};
   assign icache_rtrn_o.inv.way  = rtrn_fifo_data.l15_inval_way;
 
-  assign icache_rtrn_o.inv.all  = rtrn_fifo_data.l15_inval_icache_all_way;
-
   assign dcache_rtrn_o.inv.idx  = {rtrn_fifo_data.l15_inval_address[15:4], 4'b0000};
   assign dcache_rtrn_o.inv.way  = rtrn_fifo_data.l15_inval_way;
- 
-  assign dcache_rtrn_o.inv.all  = rtrn_fifo_data.l15_inval_dcache_all_way;
 
   fifo_v2 #(
     .dtype       (  l15_rtrn_t               ),
