@@ -233,6 +233,7 @@ package wt_cache_pkg;
     logic [63:0]                       l15_data_next_entry;       // unused in Ariane (only used for CAS atomic requests)
     logic [L15_TLB_CSM_WIDTH-1:0]      l15_csm_data;              // unused in Ariane
     logic [3:0]                        l15_amo_op;                // atomic operation type                                    
+    logic [1:0]                        l15_cmo_op;                // cmo operation type
     logic [L15_BYTE_MASK_WIDHT-1:0]    l15_be;                    // Byte mask
   } l15_req_t;
 
