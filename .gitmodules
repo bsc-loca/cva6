@@ -54,4 +54,4 @@
 	url = https://github.com/pulp-platform/common_verification.git
 [submodule "cv-hpdcache"]
 	path = cv-hpdcache
-	url = ../../core-tile/l1_d-caches/hpdcache.git
+	url = ../cv-hpdcache.git
